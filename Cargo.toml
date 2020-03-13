@@ -1,0 +1,13 @@
+[package]
+name = "absolution"
+version = "0.0.1"
+authors = ["Manish Goregaokar <manishsmail@gmail.com>"]
+edition = "2018"
+description = "'Freedom from `syn`'. Watch this space."
+license = "MIT/Apache-2.0"
+documentation = "https://docs.rs/absolution/"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
