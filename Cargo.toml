@@ -13,6 +13,13 @@ keywords = ["tokenizer", "lexer", "parser", "proc", "syn", "macro"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+nightly-doc = []
+
+
 [dependencies]
 proc-macro2 = "1.0.9"
 quote = "1.0.3"
+
+[package.metadata.docs.rs]
+features = ["nightly-doc"]

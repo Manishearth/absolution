@@ -1,5 +1,5 @@
-#![cfg_attr(doc, feature(external_doc))]
-#![cfg_attr(doc, doc(include = "../README.md"))]
+#![cfg_attr(feature = "nightly-doc", feature(external_doc))]
+#![cfg_attr(feature = "nightly-doc", doc(include = "../README.md"))]
 
 use pm::Span;
 extern crate proc_macro;
@@ -25,7 +25,7 @@ pub enum TokenTree {
     Literal(Literal),
 }
 
-pub use literal::{LitFloat, LitKind, LitInt, Literal};
+pub use literal::{LitFloat, LitInt, LitKind, Literal};
 
 /// A group of tokens, typically surrounded by [`Delimiter`]s.
 #[derive(Debug, Clone)]

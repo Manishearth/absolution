@@ -21,7 +21,7 @@ Currently the [`proc-macro-hack`](https://docs.rs/proc-macro-hack/) crate still 
 
 To use, simply use `Into` to convert from `proc_macro` or `proc_macro2` token streams to `absolution` ones, and `quote!` to convert back.
 
-```rust,compile_fail
+```rust
 extern crate proc_macro;
 use absolution::{Ident, LitKind, Punct, PunctKind, TokenStream, TokenTree};
 use quote::quote;
