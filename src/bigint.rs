@@ -1,4 +1,3 @@
-
 // Imported from syn
 // Original source: https://github.com/dtolnay/syn/blob/04b7618556d3699e47edf517933376595ad8e2ac/src/bigint.rs
 

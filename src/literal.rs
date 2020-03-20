@@ -1,71 +1,162 @@
 // Imported from syn
 // Original source: https://github.com/dtolnay/syn/blob/04b7618556d3699e47edf517933376595ad8e2ac/src/lit.rs#L875
 
+use proc_macro2 as pm;
 
-use super::*;
+use proc_macro2::Span;
+
 use crate::bigint::BigInt;
-use proc_macro2::TokenStream;
 use std::char;
 use std::ops::{Index, RangeFrom};
 
-impl Lit {
-    /// Interpret a Syn literal from a proc-macro2 literal.
-    pub fn new(token: Literal) -> Self {
-        let repr = token.to_string();
+#[derive(Debug, Clone)]
+pub struct Literal {
+    pub kind: LitKind,
+    pub span: Span,
+}
 
+// XXXManishearth technically all literals except booleans
+// can have arbitrary suffixes, however we only support them for
+// ints and floats right now
+
+#[derive(Debug, Clone)]
+pub enum LitKind {
+    Str(Box<str>),
+    ByteStr(Vec<u8>),
+    Byte(u8),
+    Char(char),
+    Int(LitInt),
+    Bool(bool),
+    Float(LitFloat),
+}
+
+#[derive(Debug, Clone)]
+pub struct LitInt {
+    digits: Box<str>,
+    suffix: IntSuffix,
+}
+
+#[derive(Debug, Clone)]
+pub enum IntSuffix {
+    Unsuffixed,
+    U8,
+    U16,
+    U32,
+    U64,
+    U128,
+    USize,
+    I8,
+    I16,
+    I32,
+    I64,
+    I128,
+    ISize,
+    UnknownSuffix(Box<str>),
+}
+
+#[derive(Debug, Clone)]
+pub struct LitFloat {
+    digits: Box<str>,
+    suffix: Box<str>,
+}
+
+#[derive(Debug, Clone)]
+pub enum FloatSuffix {
+    Unsuffixed,
+    F32,
+    F64,
+    UnknownSuffix(Box<str>),
+}
+
+impl From<Box<str>> for IntSuffix {
+    fn from(s: Box<str>) -> Self {
+        use IntSuffix::*;
+        match &*s {
+            "" => Unsuffixed,
+            "u8" => U8,
+            "u16" => U16,
+            "u32" => U32,
+            "u64" => U64,
+            "u128" => U128,
+            "usize" => USize,
+            "i8" => I8,
+            "i16" => I16,
+            "i32" => I32,
+            "i64" => I64,
+            "i128" => I128,
+            "isize" => ISize,
+            _ => UnknownSuffix(s),
+        }
+    }
+}
+
+impl From<Box<str>> for FloatSuffix {
+    fn from(s: Box<str>) -> Self {
+        use FloatSuffix::*;
+        match &*s {
+            "" => Unsuffixed,
+            "f32" => F32,
+            "f64" => F64,
+            _ => UnknownSuffix(s),
+        }
+    }
+}
+
+impl From<pm::Literal> for Literal {
+    fn from(token: pm::Literal) -> Self {
+        let span = token.span();
+        let kind = LitKind::from_pm(token);
+        Literal { span, kind }
+    }
+}
+
+impl LitKind {
+    fn from_pm(token: pm::Literal) -> Self {
+        let repr = token.to_string();
         match byte(&repr, 0) {
             b'"' | b'r' => {
-                let (_, suffix) = parse_lit_str(&repr);
-                return Lit::Str(LitStr {
-                    repr: Box::new(LitStrRepr { token, suffix }),
-                });
+                let (string, suffix) = parse_lit_str(&repr);
+                if !suffix.is_empty() {
+                    panic!("`absolution` does not support parsing strings with suffixes")
+                }
+                return LitKind::Str(string);
             }
             b'b' => match byte(&repr, 1) {
                 b'"' | b'r' => {
-                    return Lit::ByteStr(LitByteStr { token });
+                    return LitKind::ByteStr(parse_lit_byte_str(&repr));
                 }
                 b'\'' => {
-                    return Lit::Byte(LitByte { token });
+                    return LitKind::Byte(parse_lit_byte(&repr));
                 }
                 _ => {}
             },
             b'\'' => {
-                return Lit::Char(LitChar { token });
+                return LitKind::Char(parse_lit_char(&repr));
             }
             b'0'..=b'9' | b'-' => {
                 if !(repr.ends_with("f32") || repr.ends_with("f64")) {
                     if let Some((digits, suffix)) = parse_lit_int(&repr) {
-                        return Lit::Int(LitInt {
-                            repr: Box::new(LitIntRepr {
-                                token,
-                                digits,
-                                suffix,
-                            }),
+                        return LitKind::Int(LitInt {
+                            digits,
+                            suffix: suffix.into(),
                         });
                     }
                 }
                 if let Some((digits, suffix)) = parse_lit_float(&repr) {
-                    return Lit::Float(LitFloat {
-                        repr: Box::new(LitFloatRepr {
-                            token,
-                            digits,
-                            suffix,
-                        }),
+                    return LitKind::Float(LitFloat {
+                        digits,
+                        suffix: suffix.into(),
                     });
                 }
             }
             b't' | b'f' => {
                 if repr == "true" || repr == "false" {
-                    return Lit::Bool(LitBool {
-                        value: repr == "true",
-                        span: token.span(),
-                    });
+                    return LitKind::Bool(repr == "true");
                 }
             }
             _ => {}
         }
-
-        panic!("Unrecognized literal: `{}`", repr);
+        panic!("Unrecognized literal: `{}`", repr)
     }
 }
 
@@ -443,7 +534,7 @@ pub fn parse_lit_int(mut s: &str) -> Option<(Box<str>, Box<str>)> {
     }
 
     let suffix = s;
-    if suffix.is_empty() || crate::ident::xid_ok(&suffix) {
+    if suffix.is_empty() || id_ok(&suffix) {
         let mut repr = value.to_string();
         if negative {
             repr.insert(0, '-');
@@ -527,39 +618,23 @@ pub fn parse_lit_float(input: &str) -> Option<(Box<str>, Box<str>)> {
     let mut digits = String::from_utf8(bytes).unwrap();
     let suffix = digits.split_off(read);
     digits.truncate(write);
-    if suffix.is_empty() || crate::ident::xid_ok(&suffix) {
+    if suffix.is_empty() || id_ok(&suffix) {
         Some((digits.into_boxed_str(), suffix.into_boxed_str()))
     } else {
         None
     }
 }
 
-pub fn to_literal(repr: &str, digits: &str, suffix: &str) -> Option<Literal> {
-    if repr.starts_with('-') {
-        if suffix == "f64" {
-            digits.parse().ok().map(Literal::f64_suffixed)
-        } else if suffix == "f32" {
-            digits.parse().ok().map(Literal::f32_suffixed)
-        } else if suffix == "i64" {
-            digits.parse().ok().map(Literal::i64_suffixed)
-        } else if suffix == "i32" {
-            digits.parse().ok().map(Literal::i32_suffixed)
-        } else if suffix == "i16" {
-            digits.parse().ok().map(Literal::i16_suffixed)
-        } else if suffix == "i8" {
-            digits.parse().ok().map(Literal::i8_suffixed)
-        } else if !suffix.is_empty() {
-            None
-        } else if digits.contains('.') {
-            digits.parse().ok().map(Literal::f64_unsuffixed)
-        } else {
-            digits.parse().ok().map(Literal::i64_unsuffixed)
-        }
-    } else {
-        let stream = repr.parse::<TokenStream>().unwrap();
-        match stream.into_iter().next().unwrap() {
-            TokenTree::Literal(l) => Some(l),
-            _ => unreachable!(),
+pub fn id_ok(symbol: &str) -> bool {
+    let mut chars = symbol.chars();
+    let first = chars.next().unwrap();
+    if !(first.is_alphabetic() || first == '_') {
+        return false;
+    }
+    for ch in chars {
+        if !(ch.is_alphanumeric() || ch == '_') {
+            return false;
         }
     }
+    true
 }

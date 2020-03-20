@@ -1,6 +1,9 @@
 use pm::Span;
 use proc_macro2 as pm;
 
+mod bigint;
+mod literal;
+
 #[derive(Debug, Clone)]
 pub struct TokenStream {
     pub tokens: Vec<TokenTree>,
@@ -11,8 +14,10 @@ pub enum TokenTree {
     Group(Group),
     Ident(Ident),
     Punct(Punct),
-    Literal(pm::Literal),
+    Literal(Literal),
 }
+
+pub use literal::{LitFloat, LitInt, Literal};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -94,7 +99,7 @@ impl From<pm::TokenTree> for TokenTree {
             pm::TokenTree::Group(g) => TokenTree::Group(g.into()),
             pm::TokenTree::Ident(i) => TokenTree::Ident(i.into()),
             pm::TokenTree::Punct(p) => TokenTree::Punct(p.into()),
-            pm::TokenTree::Literal(l) => TokenTree::Literal(l),
+            pm::TokenTree::Literal(l) => TokenTree::Literal(l.into()),
         }
     }
 }
