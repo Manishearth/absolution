@@ -19,7 +19,9 @@ pub struct Literal {
 // XXXManishearth technically all literals except booleans
 // can have arbitrary suffixes, however we only support them for
 // ints and floats right now
-
+/// The kind of literal
+///
+/// Booleans are tokenized as identifiers
 #[derive(Debug, Clone)]
 pub enum LitKind {
     /// A string (`"foo"`)
@@ -32,13 +34,13 @@ pub enum LitKind {
     Char(char),
     /// An integer (`5`)
     Int(LitInt),
-    /// A boolean (`true`)
-    Bool(bool),
     /// A float (`3.4`)
     Float(LitFloat),
 }
 
 /// An integer literal
+///
+/// Note: any - signs will be tokenized as preceeding `Punct`s
 #[derive(Debug, Clone)]
 pub struct LitInt {
     /// The digits of the integer. Please use
@@ -82,13 +84,15 @@ pub enum IntSuffix {
 }
 
 // A float literal
+///
+/// Note: any - signs will be tokenized as preceeding `Punct`s
 #[derive(Debug, Clone)]
 pub struct LitFloat {
     /// The digits of the float. Please use
     /// `.parse()` to obtain the appropriate float
     digits: Box<str>,
     /// The type suffix, if any
-    suffix: Box<str>,
+    suffix: FloatSuffix,
 }
 
 /// The type suffix of a float literal
@@ -149,7 +153,41 @@ impl From<pm::Literal> for Literal {
 impl super::AsNative for Literal {
     type Native = pm::Literal;
     fn as_native(&self) -> pm::Literal {
-        unimplemented!()
+        use LitKind::*;
+        let mut lit = match self.kind {
+            Str(ref s) => pm::Literal::string(s),
+            ByteStr(ref s) => pm::Literal::byte_string(s),
+            Char(c) => pm::Literal::character(c),
+            Byte(b) => pm::Literal::u8_suffixed(b),
+            Float(ref f) => {
+                match f.suffix {
+                    FloatSuffix::F32 => pm::Literal::f32_suffixed(f.digits.parse().unwrap()),
+                    FloatSuffix::F64 => pm::Literal::f64_suffixed(f.digits.parse().unwrap()),
+                    FloatSuffix::Unsuffixed => pm::Literal::f64_unsuffixed(f.digits.parse().unwrap()),
+                    FloatSuffix::UnknownSuffix(ref s) => panic!("Cannot convert float with unknown suffix {} to tokens", s)
+                }
+            }
+            Int(ref i) => {
+                match i.suffix {
+                    IntSuffix::U8 => pm::Literal::u8_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::U16 => pm::Literal::u16_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::U32 => pm::Literal::u32_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::U64 => pm::Literal::u64_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::U128 => pm::Literal::u128_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::USize => pm::Literal::usize_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::I8 => pm::Literal::i8_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::I16 => pm::Literal::i16_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::I32 => pm::Literal::i32_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::I64 => pm::Literal::i64_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::I128 => pm::Literal::i128_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::ISize => pm::Literal::isize_suffixed(i.digits.parse().unwrap()),
+                    IntSuffix::Unsuffixed => pm::Literal::u128_unsuffixed(i.digits.parse().unwrap()),
+                    IntSuffix::UnknownSuffix(ref s) => panic!("Cannot convert integer with unknown suffix {} to tokens", s)
+                }
+            }
+        };
+        lit.set_span(self.span);
+        lit
     }
 }
 
@@ -192,11 +230,7 @@ impl LitKind {
                     });
                 }
             }
-            b't' | b'f' => {
-                if repr == "true" || repr == "false" {
-                    return LitKind::Bool(repr == "true");
-                }
-            }
+
             _ => {}
         }
         panic!("Unrecognized literal: `{}`", repr)
