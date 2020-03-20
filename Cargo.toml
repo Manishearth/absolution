@@ -3,9 +3,12 @@ name = "absolution"
 version = "0.0.1"
 authors = ["Manish Goregaokar <manishsmail@gmail.com>"]
 edition = "2018"
-description = "'Freedom from `syn`'. Watch this space."
+description = "'Freedom from `syn`'. A lightweight Rust lexer designed for use in bang-style proc macros."
 license = "MIT/Apache-2.0"
+repository = "https://github.com/Manishearth/absolution"
 documentation = "https://docs.rs/absolution/"
+categories = ["development-tools::procedural-macro-helpers"]
+keywords = ["tokenizer", "lexer", "parser", "proc", "syn", "macro"]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

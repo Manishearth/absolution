@@ -45,9 +45,9 @@ pub enum LitKind {
 pub struct LitInt {
     /// The digits of the integer. Please use
     /// `.parse()` to obtain the appropriate integer
-    digits: Box<str>,
+    pub digits: Box<str>,
     /// The type suffix, if any
-    suffix: IntSuffix,
+    pub suffix: IntSuffix,
 }
 
 /// The type suffix of an integer literal
@@ -90,9 +90,9 @@ pub enum IntSuffix {
 pub struct LitFloat {
     /// The digits of the float. Please use
     /// `.parse()` to obtain the appropriate float
-    digits: Box<str>,
+    pub digits: Box<str>,
     /// The type suffix, if any
-    suffix: FloatSuffix,
+    pub suffix: FloatSuffix,
 }
 
 /// The type suffix of a float literal

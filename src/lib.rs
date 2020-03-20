@@ -1,4 +1,8 @@
+#![cfg_attr(doc, feature(external_doc))]
+#![cfg_attr(doc, doc(include = "../README.md"))]
+
 use pm::Span;
+extern crate proc_macro;
 use proc_macro2 as pm;
 use quote::ToTokens;
 
@@ -21,19 +25,19 @@ pub enum TokenTree {
     Literal(Literal),
 }
 
-pub use literal::{LitFloat, LitInt, Literal};
+pub use literal::{LitFloat, LitKind, LitInt, Literal};
 
 /// A group of tokens, typically surrounded by [`Delimiter`]s.
 #[derive(Debug, Clone)]
 pub struct Group {
-    stream: TokenStream,
-    delimiter: Delimiter,
+    pub stream: TokenStream,
+    pub delimiter: Delimiter,
     /// The span of the entire group, including delimiters
-    span: Span,
+    pub span: Span,
     /// The span of the opening delimiter
-    span_open: Span,
+    pub span_open: Span,
     /// The span of the closing delimiter
-    span_close: Span,
+    pub span_close: Span,
 }
 
 pub use pm::Delimiter;
@@ -41,24 +45,24 @@ pub use pm::Delimiter;
 /// An identifier
 #[derive(Debug, Clone)]
 pub struct Ident {
-    span: Span,
-    ident: String,
+    pub span: Span,
+    pub ident: String,
 }
 
 /// A punctuation token.
 #[derive(Debug, Clone)]
 pub struct Punct {
-    kind: PunctKind,
-    span: Span,
+    pub kind: PunctKind,
+    pub span: Span,
     /// Whether or not it is separated from the proceeding punctuation
     /// token by whitespace
-    spacing: Spacing,
+    pub spacing: Spacing,
 }
 
 pub use pm::Spacing;
 
 /// The specific kind of punctuation token
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum PunctKind {
     /// `;`
     Semicolon,
@@ -125,6 +129,13 @@ impl From<pm::TokenStream> for TokenStream {
         Self {
             tokens: p.into_iter().map(|t| t.into()).collect(),
         }
+    }
+}
+
+impl From<proc_macro::TokenStream> for TokenStream {
+    fn from(p: proc_macro::TokenStream) -> Self {
+        let p: pm::TokenStream = p.into();
+        p.into()
     }
 }
 
