@@ -47,6 +47,7 @@ pub fn make_func(tt: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 ```
 
+See [`examples/string-enum`](github.com/manishearth/absolution/tree/master/examples/string-enum) for more examples
 
 #### License
 
