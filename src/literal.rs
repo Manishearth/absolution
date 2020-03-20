@@ -9,6 +9,7 @@ use crate::bigint::BigInt;
 use std::char;
 use std::ops::{Index, RangeFrom};
 
+/// A literal token
 #[derive(Debug, Clone)]
 pub struct Literal {
     pub kind: LitKind,
@@ -21,50 +22,85 @@ pub struct Literal {
 
 #[derive(Debug, Clone)]
 pub enum LitKind {
+    /// A string (`"foo"`)
     Str(Box<str>),
+    /// A byte string (`b"foo"`)
     ByteStr(Vec<u8>),
+    /// A byte literal (`b'a'`)
     Byte(u8),
+    /// A character literal (`'a'`)
     Char(char),
+    /// An integer (`5`)
     Int(LitInt),
+    /// A boolean (`true`)
     Bool(bool),
+    /// A float (`3.4`)
     Float(LitFloat),
 }
 
+/// An integer literal
 #[derive(Debug, Clone)]
 pub struct LitInt {
+    /// The digits of the integer. Please use
+    /// `.parse()` to obtain the appropriate integer
     digits: Box<str>,
+    /// The type suffix, if any
     suffix: IntSuffix,
 }
 
+/// The type suffix of an integer literal
 #[derive(Debug, Clone)]
 pub enum IntSuffix {
+    /// No suffix (e.g. `1`)
     Unsuffixed,
+    /// A `u8` suffix (e.g. `10_u8`)
     U8,
+    /// A `u16` suffix (e.g. `10_u16`)
     U16,
+    /// A `u32` suffix (e.g. `10_u32`)
     U32,
+    /// A `u64` suffix (e.g. `10_u64`)
     U64,
+    /// A `u128` suffix (e.g. `10_u128`)
     U128,
+    /// A `uSize` suffix (e.g. `10_uSize`)
     USize,
+    /// A `i8` suffix (e.g. `10_i8`)
     I8,
+    /// A `i16` suffix (e.g. `10_i16`)
     I16,
+    /// A `i32` suffix (e.g. `10_i32`)
     I32,
+    /// A `i64` suffix (e.g. `10_i64`)
     I64,
+    /// A `i128` suffix (e.g. `10_i128`)
     I128,
+    /// A `iSize` suffix (e.g. `10_iSize`)
     ISize,
+    /// Some other suffix (e.g. `10_foobar`)
     UnknownSuffix(Box<str>),
 }
 
+// A float literal
 #[derive(Debug, Clone)]
 pub struct LitFloat {
+    /// The digits of the float. Please use
+    /// `.parse()` to obtain the appropriate float
     digits: Box<str>,
+    /// The type suffix, if any
     suffix: Box<str>,
 }
 
+/// The type suffix of a float literal
 #[derive(Debug, Clone)]
 pub enum FloatSuffix {
+    /// No suffix (e.g. `1.0`)
     Unsuffixed,
+    /// An `f32` suffix (e.g. `10_f32`)
     F32,
+    /// An `f64` suffix (e.g. `10_f64`)
     F64,
+    /// Some other suffix (e.g. `1.0_foobar`)
     UnknownSuffix(Box<str>),
 }
 
@@ -110,8 +146,9 @@ impl From<pm::Literal> for Literal {
     }
 }
 
-impl Literal {
-    pub fn as_native(&self) -> pm::Literal {
+impl super::AsNative for Literal {
+    type Native = pm::Literal;
+    fn as_native(&self) -> pm::Literal {
         unimplemented!()
     }
 }

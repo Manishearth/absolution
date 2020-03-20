@@ -5,11 +5,14 @@ use quote::ToTokens;
 mod bigint;
 mod literal;
 
+/// A stream of [`TokenTree`]s. This is typically what a proc macro will receive
 #[derive(Debug, Clone)]
 pub struct TokenStream {
     pub tokens: Vec<TokenTree>,
 }
 
+/// A single node in the token tree, i.e. a single token. May contain more
+/// tokens via [`Group`].
 #[derive(Debug, Clone)]
 pub enum TokenTree {
     Group(Group),
@@ -20,28 +23,41 @@ pub enum TokenTree {
 
 pub use literal::{LitFloat, LitInt, Literal};
 
+/// A group of tokens, typically surrounded by [`Delimiter`]s.
 #[derive(Debug, Clone)]
 pub struct Group {
     stream: TokenStream,
-    delimiter: pm::Delimiter,
+    delimiter: Delimiter,
+    /// The span of the entire group, including delimiters
     span: Span,
+    /// The span of the opening delimiter
     span_open: Span,
+    /// The span of the closing delimiter
     span_close: Span,
 }
 
+pub use pm::Delimiter;
+
+/// An identifier
 #[derive(Debug, Clone)]
 pub struct Ident {
     span: Span,
     ident: String,
 }
 
+/// A punctuation token.
 #[derive(Debug, Clone)]
 pub struct Punct {
     kind: PunctKind,
     span: Span,
-    spacing: pm::Spacing,
+    /// Whether or not it is separated from the proceeding punctuation
+    /// token by whitespace
+    spacing: Spacing,
 }
 
+pub use pm::Spacing;
+
+/// The specific kind of punctuation token
 #[derive(Debug, Clone)]
 pub enum PunctKind {
     /// `;`
@@ -86,6 +102,24 @@ pub enum PunctKind {
     Percent,
 }
 
+pub trait AsNative {
+    type Native;
+    /// Convert an `absolution` token into its `proc_macro2` counterpart
+    fn as_native(&self) -> Self::Native;
+}
+
+impl TokenTree {
+    /// The span of this token tree
+    pub fn span(&self) -> Span {
+        match self {
+            TokenTree::Group(ref g) => g.span,
+            TokenTree::Ident(ref i) => i.span,
+            TokenTree::Punct(ref p) => p.span,
+            TokenTree::Literal(ref l) => l.span,
+        }
+    }
+}
+
 impl From<pm::TokenStream> for TokenStream {
     fn from(p: pm::TokenStream) -> Self {
         Self {
@@ -94,8 +128,9 @@ impl From<pm::TokenStream> for TokenStream {
     }
 }
 
-impl TokenStream {
-    pub fn as_native(&self) -> pm::TokenStream {
+impl AsNative for TokenStream {
+    type Native = pm::TokenStream;
+    fn as_native(&self) -> pm::TokenStream {
         self.tokens.iter().map(|t| t.as_native()).collect()
     }
 }
@@ -111,8 +146,9 @@ impl From<pm::TokenTree> for TokenTree {
     }
 }
 
-impl TokenTree {
-    pub fn as_native(&self) -> pm::TokenTree {
+impl AsNative for TokenTree {
+    type Native = pm::TokenTree;
+    fn as_native(&self) -> pm::TokenTree {
         match self {
             TokenTree::Group(ref g) => pm::TokenTree::Group(g.as_native()),
             TokenTree::Ident(ref i) => pm::TokenTree::Ident(i.as_native()),
@@ -139,8 +175,9 @@ impl From<pm::Group> for Group {
     }
 }
 
-impl Group {
-    pub fn as_native(&self) -> pm::Group {
+impl AsNative for Group {
+    type Native = pm::Group;
+    fn as_native(&self) -> pm::Group {
         let mut g = pm::Group::new(self.delimiter, self.stream.as_native());
         g.set_span(self.span);
         g
@@ -156,8 +193,9 @@ impl From<pm::Ident> for Ident {
     }
 }
 
-impl Ident {
-    pub fn as_native(&self) -> pm::Ident {
+impl AsNative for Ident {
+    type Native = pm::Ident;
+    fn as_native(&self) -> pm::Ident {
         pm::Ident::new(&self.ident, self.span)
     }
 }
@@ -199,8 +237,9 @@ impl From<pm::Punct> for Punct {
     }
 }
 
-impl Punct {
-    pub fn as_native(&self) -> pm::Punct {
+impl AsNative for Punct {
+    type Native = pm::Punct;
+    fn as_native(&self) -> pm::Punct {
         pm::Punct::new(self.kind.as_char(), self.spacing)
     }
 }
