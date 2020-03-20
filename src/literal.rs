@@ -110,6 +110,12 @@ impl From<pm::Literal> for Literal {
     }
 }
 
+impl Literal {
+    pub fn as_native(&self) -> pm::Literal {
+        unimplemented!()
+    }
+}
+
 impl LitKind {
     fn from_pm(token: pm::Literal) -> Self {
         let repr = token.to_string();
