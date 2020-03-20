@@ -1,5 +1,5 @@
-use proc_macro2;
 use absolution::TokenStream;
+use proc_macro2;
 use quote::{quote, ToTokens};
 
 fn test_roundtrip(pm: proc_macro2::TokenStream) {
@@ -18,5 +18,5 @@ fn roundtrip_basic() {
     test_roundtrip(quote!("hello"));
     test_roundtrip(quote!(1 2 3 -1));
     test_roundtrip(quote!(1 + (1 - five)));
-    test_roundtrip(quote!(1 += 3 (foo("hi"))));
+    test_roundtrip(quote!(1 += 3(foo("hi"))));
 }

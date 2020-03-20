@@ -159,32 +159,32 @@ impl super::AsNative for Literal {
             ByteStr(ref s) => pm::Literal::byte_string(s),
             Char(c) => pm::Literal::character(c),
             Byte(b) => pm::Literal::u8_suffixed(b),
-            Float(ref f) => {
-                match f.suffix {
-                    FloatSuffix::F32 => pm::Literal::f32_suffixed(f.digits.parse().unwrap()),
-                    FloatSuffix::F64 => pm::Literal::f64_suffixed(f.digits.parse().unwrap()),
-                    FloatSuffix::Unsuffixed => pm::Literal::f64_unsuffixed(f.digits.parse().unwrap()),
-                    FloatSuffix::UnknownSuffix(ref s) => panic!("Cannot convert float with unknown suffix {} to tokens", s)
+            Float(ref f) => match f.suffix {
+                FloatSuffix::F32 => pm::Literal::f32_suffixed(f.digits.parse().unwrap()),
+                FloatSuffix::F64 => pm::Literal::f64_suffixed(f.digits.parse().unwrap()),
+                FloatSuffix::Unsuffixed => pm::Literal::f64_unsuffixed(f.digits.parse().unwrap()),
+                FloatSuffix::UnknownSuffix(ref s) => {
+                    panic!("Cannot convert float with unknown suffix {} to tokens", s)
                 }
-            }
-            Int(ref i) => {
-                match i.suffix {
-                    IntSuffix::U8 => pm::Literal::u8_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::U16 => pm::Literal::u16_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::U32 => pm::Literal::u32_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::U64 => pm::Literal::u64_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::U128 => pm::Literal::u128_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::USize => pm::Literal::usize_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::I8 => pm::Literal::i8_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::I16 => pm::Literal::i16_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::I32 => pm::Literal::i32_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::I64 => pm::Literal::i64_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::I128 => pm::Literal::i128_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::ISize => pm::Literal::isize_suffixed(i.digits.parse().unwrap()),
-                    IntSuffix::Unsuffixed => pm::Literal::u128_unsuffixed(i.digits.parse().unwrap()),
-                    IntSuffix::UnknownSuffix(ref s) => panic!("Cannot convert integer with unknown suffix {} to tokens", s)
+            },
+            Int(ref i) => match i.suffix {
+                IntSuffix::U8 => pm::Literal::u8_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::U16 => pm::Literal::u16_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::U32 => pm::Literal::u32_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::U64 => pm::Literal::u64_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::U128 => pm::Literal::u128_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::USize => pm::Literal::usize_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::I8 => pm::Literal::i8_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::I16 => pm::Literal::i16_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::I32 => pm::Literal::i32_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::I64 => pm::Literal::i64_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::I128 => pm::Literal::i128_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::ISize => pm::Literal::isize_suffixed(i.digits.parse().unwrap()),
+                IntSuffix::Unsuffixed => pm::Literal::u128_unsuffixed(i.digits.parse().unwrap()),
+                IntSuffix::UnknownSuffix(ref s) => {
+                    panic!("Cannot convert integer with unknown suffix {} to tokens", s)
                 }
-            }
+            },
         };
         lit.set_span(self.span);
         lit
