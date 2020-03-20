@@ -23,28 +23,35 @@ To use, simply use `Into` to convert from `proc_macro` or `proc_macro2` token st
 
 ```rust
 extern crate proc_macro;
-use absolution::{Ident, LitKind, Punct, PunctKind, TokenStream, TokenTree};
+use absolution::{Ident, LitKind, Literal, TokenStream, TokenTree};
 use quote::quote;
 
 #[proc_macro]
 pub fn make_func(tt: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let stream: TokenStream = tt.into();
     let first_token = &stream.tokens[0];
-    let s = if let TokenTree::Lit(Literal {kind: LitKind::Str(s), ..}) = &first_token {
+    let s = if let TokenTree::Literal(Literal {
+        kind: LitKind::Str(s),
+        ..
+    }) = &first_token
+    {
         s
     } else {
         panic!("Must start with a string!")
     };
 
-    let ident = Ident { ident: s.into(), span: first_token.span() };
+    let ident = Ident {
+        ident: s.to_string(),
+        span: first_token.span(),
+    };
 
     quote!(
         fn #ident() -> &'static str {
             #first_token
         }
-    ).into()
+    )
+    .into()
 }
-
 ```
 
 See [`examples/string-enum`](github.com/manishearth/absolution/tree/master/examples/string-enum) for more examples
