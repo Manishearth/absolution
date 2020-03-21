@@ -15,4 +15,6 @@ jobs:
       run: cargo test
     - name: Test example
       run: cd examples/string-enum && cargo run --example simple
+    - name: Test absolution-hack
+      run: cd absolution-hack/example && cargo run
 

@@ -1,0 +1,11 @@
+[package]
+name = "absolution-hack"
+version = "0.1.0"
+authors = ["Nika Layzell <nika@thelayzells.com>"]
+edition = "2018"
+description = "Miminal version of 'proc-macro-hack' which doesn't require 'syn'"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/Manishearth/absolution"
+categories = ["development-tools::procedural-macro-helpers"]
+
+[dependencies]

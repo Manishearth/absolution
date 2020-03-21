@@ -1,0 +1,11 @@
+[package]
+name = "demo-hack"
+version = "0.1.0"
+authors = ["Nika Layzell <nika@thelayzells.com>"]
+edition = "2018"
+
+publish = false
+
+[dependencies]
+absolution-hack = { path = ".." }
+demo-hack-impl = { path = "../demo-hack-impl" }
